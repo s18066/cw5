@@ -1,0 +1,21 @@
+﻿create procedure UpdateEnrollment @studies Nvarchar(255), @semester int
+As
+Begin
+    declare @enrollmentId int;
+    select @enrollmentId = IdEnrollment from Enrollment where Semester = @semester + 1 And IdStudy = (select IdStudy from Studies where Name = @studies);
+
+    if @enrollmentId is null begin
+        insert into Enrollment(IdEnrollment, Semester, IdStudy, StartDate) values (
+                                                                                      (select max(IdEnrollment) +1 from Enrollment),
+                                                                                      @semester + 1,
+                                                                                      (select IdStudy from Studies where Name = @studies),
+                                                                                      GETDATE());
+    end;
+
+    select @enrollmentId = IdEnrollment from Enrollment where Semester = @semester + 1 And IdStudy = (select IdStudy from Studies where Name = @studies);
+
+    update Student
+    set IdEnrollment = @enrollmentId
+    where IdEnrollment =
+          (select IdEnrollment from Enrollment where Semester = @semester And IdStudy = (select IdStudy from Studies where Name = @studies));
+end;
